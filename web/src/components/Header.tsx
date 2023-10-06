@@ -1,9 +1,10 @@
-import { Clock, Gem, Bag, ArrowEnclosed, Heart, Siren } from "./icons";
-import { Button, Divider, Flex, HStack, Text } from "@chakra-ui/react";
+import { Clock, Gem, Bag, Arrow, Heart, Siren } from "./icons";
+import { Divider, Flex, HStack, Text } from "@chakra-ui/react";
 import { useEffect, useState, useCallback } from "react";
 import { IsMobile, generatePixelBorderPath } from "@/utils/ui";
 import { useRouter } from "next/router";
 import { initSoundStore } from "@/hooks/sound";
+import Button from "@/components/Button";
 import HeaderButton from "@/components/HeaderButton";
 import MediaPlayer from "@/components/MediaPlayer";
 import MobileMenu from "@/components/MobileMenu";
@@ -13,6 +14,7 @@ import { formatCash } from "@/utils/ui";
 import { useDojo } from "@/dojo";
 import { formatAddress } from "@/utils/contract";
 import PixelatedBorderImage from "./icons/PixelatedBorderImage";
+import { playSound, Sounds } from "@/hooks/sound";
 import colors from "@/theme/colors";
 import { headerStyles, headerButtonStyles } from "@/theme/styles";
 import {
@@ -45,7 +47,11 @@ const Header = ({ back }: HeaderProps) => {
     gameId,
   });
 
+  const isAtSummary = router.pathname === "/[gameId]/summary";
+
   const moveToSummary = () => {
+    if (isAtSummary) return;
+    playSound(Sounds.HoverClick, 0.3);
     router.push(`/${gameId}/summary`);
   };
 
@@ -82,10 +88,15 @@ const Header = ({ back }: HeaderProps) => {
       <HStack flex="1" justify={["left", "right"]}></HStack>
       {playerEntity && gameEntity && (
         <HStack flex="1" justify="center">
-          {router.pathname === "/[gameId]/summary" && (
-            <HeaderButton onClick={router.back}>
-              <ArrowEnclosed direction="left" />
-            </HeaderButton>
+          {isAtSummary && (
+            <Button
+              w="12"
+              onClick={router.back}
+              sx={headerButtonStyles}
+              h="48px"
+            >
+              <Arrow size="lg" direction="left" />
+            </Button>
           )}
           <HStack
             h="48px"
@@ -97,9 +108,9 @@ const Header = ({ back }: HeaderProps) => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             _hover={
-              router.pathname !== "/[gameId]/summary"
+              !isAtSummary
                 ? { bg: "neon.600", cursor: "pointer" }
-                : {}
+                : { cursor: "not-allowed" }
             }
             onClick={moveToSummary}
           >
@@ -110,9 +121,7 @@ const Header = ({ back }: HeaderProps) => {
               <HStack>
                 <Divider
                   borderColor={
-                    router.pathname !== "/[gameId]/summary" && isHovered
-                      ? "neon.500"
-                      : "neon.600"
+                    !isAtSummary && isHovered ? "neon.500" : "neon.600"
                   }
                   orientation="vertical"
                   h="12px"
