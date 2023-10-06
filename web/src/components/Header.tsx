@@ -1,6 +1,6 @@
-import { Clock, Gem, Bag, Arrow, Heart, Siren } from "./icons";
+import { Clock, Gem, Bag, ArrowEnclosed, Heart, Siren } from "./icons";
 import { Button, Divider, Flex, HStack, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { IsMobile, generatePixelBorderPath } from "@/utils/ui";
 import { useRouter } from "next/router";
 import { initSoundStore } from "@/hooks/sound";
@@ -15,6 +15,13 @@ import { formatAddress } from "@/utils/contract";
 import PixelatedBorderImage from "./icons/PixelatedBorderImage";
 import colors from "@/theme/colors";
 import { headerStyles, headerButtonStyles } from "@/theme/styles";
+import {
+  getDrugById,
+  getLocationById,
+  getLocationByType,
+  locations,
+  sortDrugMarkets,
+} from "@/dojo/helpers";
 
 // TODO: constrain this on contract side
 const MAX_INVENTORY = 100;
@@ -27,6 +34,7 @@ const Header = ({ back }: HeaderProps) => {
   const router = useRouter();
   const { gameId } = router.query as { gameId: string };
   const [inventory, setInventory] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const { account, createBurner, isBurnerDeploying } = useDojo();
 
   const { player: playerEntity } = usePlayerEntity({
@@ -36,6 +44,12 @@ const Header = ({ back }: HeaderProps) => {
   const { game: gameEntity } = useGameEntity({
     gameId,
   });
+
+  const moveToSummary = () => {
+    router.push(`/${gameId}/summary`);
+  };
+
+  const onBack = useCallback(() => {}, [null]);
 
   const isMobile = IsMobile();
 
@@ -68,6 +82,11 @@ const Header = ({ back }: HeaderProps) => {
       <HStack flex="1" justify={["left", "right"]}></HStack>
       {playerEntity && gameEntity && (
         <HStack flex="1" justify="center">
+          {router.pathname === "/[gameId]/summary" && (
+            <HeaderButton onClick={router.back}>
+              <ArrowEnclosed direction="left" />
+            </HeaderButton>
+          )}
           <HStack
             h="48px"
             w="auto"
@@ -75,6 +94,14 @@ const Header = ({ back }: HeaderProps) => {
             spacing={["10px", "30px"]}
             bg="neon.700"
             sx={{ ...headerStyles }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            _hover={
+              router.pathname !== "/[gameId]/summary"
+                ? { bg: "neon.600", cursor: "pointer" }
+                : {}
+            }
+            onClick={moveToSummary}
           >
             <Flex w="full" align="center" justify="center" gap="10px">
               <HStack>
@@ -82,8 +109,12 @@ const Header = ({ back }: HeaderProps) => {
               </HStack>
               <HStack>
                 <Divider
+                  borderColor={
+                    router.pathname !== "/[gameId]/summary" && isHovered
+                      ? "neon.500"
+                      : "neon.600"
+                  }
                   orientation="vertical"
-                  borderColor="neon.600"
                   h="12px"
                 />
                 <HStack>
