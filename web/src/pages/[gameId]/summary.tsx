@@ -12,6 +12,7 @@ import { formatCash } from "@/utils/ui";
 import colors from "@/theme/colors";
 
 import {
+  Box,
   Heading,
   Grid,
   GridItem,
@@ -23,10 +24,10 @@ import {
 
 export default function Summary() {
   return (
-    <Layout CustomLeftPanel={() => <CustomLeftPanel title="Huster Log" />}>
+    <Layout CustomLeftPanel={() => <CustomLeftPanel title="Hustler Log" />}>
       <VStack my="auto" display={["none", "flex"]} gap="20px">
         <VStack w="full" align="flex-start">
-          <Text>Here will be the recap ;)</Text>
+          <Text>Here we will have the recap!</Text>
         </VStack>
       </VStack>
     </Layout>
@@ -79,10 +80,12 @@ const PlayerStats = () => {
   });
   const address = account?.address || "";
   return playerEntity && gameEntity ? (
-    <HStack h="500">
+    <HStack h="lg">
       <Card
         p={4}
         paddingBottom={2}
+        paddingRight={12}
+        w="full"
         sx={{
           borderImageSource: `url("data:image/svg+xml,${BorderImage({
             color: colors.neon["700"].toString(),
@@ -96,20 +99,19 @@ const PlayerStats = () => {
           color="green"
         />
       </Card>
-      <Grid
-        templateRows="repeat(3, 1fr)"
-        position="relative"
-        fontSize="lg"
-        ml="5"
-        p="6px"
-        gap={5}
-      >
-        <GridItem>
+      <Grid position="relative" fontSize="lg" ml="5" w="full">
+        <Box
+          position="absolute"
+          boxSize="full"
+          border="2px"
+          borderColor="neon.900"
+        />
+        <GridItem p="6px" colSpan={1} border="1px" borderColor="neon.700">
           <HStack>
             <Gem /> <Text>{formatCash(playerEntity.cash)}</Text>
           </HStack>
         </GridItem>
-        <GridItem>
+        <GridItem p="6px" colSpan={1} border="1px" borderColor="neon.700">
           <HStack>
             <Calendar />{" "}
             <Text>
@@ -117,7 +119,7 @@ const PlayerStats = () => {
             </Text>
           </HStack>
         </GridItem>
-        <GridItem>
+        <GridItem p="6px" colSpan={1} border="1px" borderColor="neon.700">
           <HStack>
             <Heart /> <Text>{playerEntity.health}</Text>
           </HStack>
