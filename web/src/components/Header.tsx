@@ -12,7 +12,7 @@ import { useGameEntity } from "@/dojo/entities/useGameEntity";
 import { formatCash } from "@/utils/ui";
 import { useDojo } from "@/dojo";
 import { formatAddress } from "@/utils/contract";
-import { headerButtonStyles } from "@/theme/styles";
+import { headerButtonStyles, headerStyles } from "@/theme/styles";
 
 // TODO: constrain this on contract side
 const MAX_INVENTORY = 100;
@@ -36,11 +36,6 @@ const Header = ({ back }: HeaderProps) => {
   const { game: gameEntity } = useGameEntity({
     gameId,
   });
-
-  const moveToSummary = () => {
-    if (isAtSummary) return;
-    router.push(`/${gameId}/summary`);
-  };
 
   useEffect(() => {
     const init = async () => {
@@ -87,9 +82,11 @@ const Header = ({ back }: HeaderProps) => {
             px="20px"
             spacing={["10px", "30px"]}
             bg="neon.700"
-            sx={{ ...headerButtonStyles }}
-            onClick={moveToSummary}
-            as={Button}
+            onClick={() => {
+              isAtSummary ? undefined : router.push(`/${gameId}/summary`);
+            }}
+            sx={isAtSummary ? { ...headerStyles } : { ...headerButtonStyles }}
+            as={isAtSummary ? HStack : Button}
           >
             <Flex w="full" align="center" justify="center" gap="10px">
               <HStack>
