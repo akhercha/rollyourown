@@ -1,10 +1,9 @@
 import { Clock, Gem, Bag, Arrow, Heart, Siren } from "./icons";
-import { Divider, Flex, HStack, Text } from "@chakra-ui/react";
-import { useEffect, useState, useCallback } from "react";
+import { Button, Divider, Flex, HStack, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { IsMobile, generatePixelBorderPath } from "@/utils/ui";
 import { useRouter } from "next/router";
 import { initSoundStore } from "@/hooks/sound";
-import Button from "@/components/Button";
 import HeaderButton from "@/components/HeaderButton";
 import MediaPlayer from "@/components/MediaPlayer";
 import MobileMenu from "@/components/MobileMenu";
@@ -15,15 +14,7 @@ import { useDojo } from "@/dojo";
 import { formatAddress } from "@/utils/contract";
 import PixelatedBorderImage from "./icons/PixelatedBorderImage";
 import { playSound, Sounds } from "@/hooks/sound";
-import colors from "@/theme/colors";
-import { headerStyles, headerButtonStyles } from "@/theme/styles";
-import {
-  getDrugById,
-  getLocationById,
-  getLocationByType,
-  locations,
-  sortDrugMarkets,
-} from "@/dojo/helpers";
+import { headerButtonStyles } from "@/theme/styles";
 
 // TODO: constrain this on contract side
 const MAX_INVENTORY = 100;
@@ -36,7 +27,6 @@ const Header = ({ back }: HeaderProps) => {
   const router = useRouter();
   const { gameId } = router.query as { gameId: string };
   const [inventory, setInventory] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   const { account, createBurner, isBurnerDeploying } = useDojo();
 
   const { player: playerEntity } = usePlayerEntity({
@@ -47,6 +37,7 @@ const Header = ({ back }: HeaderProps) => {
     gameId,
   });
 
+  const isMobile = IsMobile();
   const isAtSummary = router.pathname === "/[gameId]/summary";
 
   const moveToSummary = () => {
@@ -54,10 +45,6 @@ const Header = ({ back }: HeaderProps) => {
     playSound(Sounds.HoverClick, 0.3);
     router.push(`/${gameId}/summary`);
   };
-
-  const onBack = useCallback(() => {}, [null]);
-
-  const isMobile = IsMobile();
 
   useEffect(() => {
     const init = async () => {
@@ -92,7 +79,7 @@ const Header = ({ back }: HeaderProps) => {
             <Button
               w="12"
               onClick={router.back}
-              sx={headerButtonStyles}
+              sx={{ ...headerButtonStyles }}
               h="48px"
             >
               <Arrow size="lg" direction="left" />
@@ -104,15 +91,9 @@ const Header = ({ back }: HeaderProps) => {
             px="20px"
             spacing={["10px", "30px"]}
             bg="neon.700"
-            sx={{ ...headerStyles }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            _hover={
-              !isAtSummary
-                ? { bg: "neon.600", cursor: "pointer" }
-                : { cursor: "not-allowed" }
-            }
+            sx={{ ...headerButtonStyles }}
             onClick={moveToSummary}
+            as="button"
           >
             <Flex w="full" align="center" justify="center" gap="10px">
               <HStack>
@@ -120,11 +101,9 @@ const Header = ({ back }: HeaderProps) => {
               </HStack>
               <HStack>
                 <Divider
-                  borderColor={
-                    !isAtSummary && isHovered ? "neon.500" : "neon.600"
-                  }
                   orientation="vertical"
                   h="12px"
+                  borderColor="neon.600"
                 />
                 <HStack>
                   <Heart /> <Text>{playerEntity.health}</Text>

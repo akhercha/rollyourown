@@ -42,3 +42,6 @@ next-env.d.ts
 
 # editor configuration
 .vscode
+
+# bun
+bun.lockb
