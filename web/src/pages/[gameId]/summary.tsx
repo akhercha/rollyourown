@@ -30,6 +30,9 @@ export default function Summary() {
           <Text>Here we will have the recap!</Text>
         </VStack>
       </VStack>
+      <VStack display={["flex", "none"]}>
+        <Text>Here we will have the recap for mobile!</Text>
+      </VStack>
     </Layout>
   );
 }
