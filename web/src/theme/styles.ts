@@ -43,20 +43,21 @@ export const cardPixelatedStyle = ({
   radius?: number;
 }) => ({
   w: "full",
-  bg: color,
-  borderWidth: "0",
-  borderRadius: "0",
-
-  borderImageSource: "none",
-  _hover: {
-    borderImageSource: `none`,
+  sx: {
+    bg: color,
+    borderWidth: "0",
+    borderRadius: "0",
+    borderImageSource: "none",
+    _hover: {
+      borderImageSource: `none`,
+    },
+    _active: {
+      top: 0,
+      left: 0,
+      borderImageSource: `none`,
+    },
+    clipPath: `polygon(${generatePixelBorderPath(radius, pixelSize)})`,
   },
-  _active: {
-    top: 0,
-    left: 0,
-    borderImageSource: `none`,
-  },
-  clipPath: `polygon(${generatePixelBorderPath(radius, pixelSize)})`,
 });
 
 // use borderImage & borderImageOutset to display border with outset
@@ -103,10 +104,11 @@ export const headerStyles = {
   borderImageSource: [
     `url("data:image/svg+xml,${PixelatedBorderImage({
       color: colors.neon["700"].toString(),
-    })}")`, 'none'
+    })}")`,
+    "none",
   ],
   clipPath: ["none", `polygon(${generatePixelBorderPath()})`],
-}
+};
 
 export const headerButtonStyles = {
   ...headerStyles,
@@ -115,10 +117,11 @@ export const headerButtonStyles = {
     borderImageSource: [
       `url("data:image/svg+xml,${PixelatedBorderImage({
         color: colors.neon["600"].toString(),
-      })}")`, 'none'
-    ]
+      })}")`,
+      "none",
+    ],
   },
-}
+};
 
 //layer styles
 export const layerStyles = {
