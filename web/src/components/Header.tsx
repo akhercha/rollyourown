@@ -1,10 +1,10 @@
 import { Clock, Gem, Bag, Arrow, Heart, Siren } from "./icons";
-import { Button, Divider, Flex, HStack, Text } from "@chakra-ui/react";
+import { Divider, Flex, HStack, Text } from "@chakra-ui/react";
+import Button from "@/components/Button";
 import { useEffect, useState } from "react";
 import { IsMobile, generatePixelBorderPath } from "@/utils/ui";
 import { useRouter } from "next/router";
 import { initSoundStore } from "@/hooks/sound";
-import HeaderButton from "@/components/HeaderButton";
 import MediaPlayer from "@/components/MediaPlayer";
 import MobileMenu from "@/components/MobileMenu";
 import { usePlayerEntity } from "@/dojo/entities/usePlayerEntity";
@@ -12,8 +12,6 @@ import { useGameEntity } from "@/dojo/entities/useGameEntity";
 import { formatCash } from "@/utils/ui";
 import { useDojo } from "@/dojo";
 import { formatAddress } from "@/utils/contract";
-import PixelatedBorderImage from "./icons/PixelatedBorderImage";
-import { playSound, Sounds } from "@/hooks/sound";
 import { headerButtonStyles } from "@/theme/styles";
 
 // TODO: constrain this on contract side
@@ -24,7 +22,9 @@ export interface HeaderProps {
 }
 
 const Header = ({ back }: HeaderProps) => {
+  const isMobile = IsMobile();
   const router = useRouter();
+  const isAtSummary = router.pathname === "/[gameId]/summary";
   const { gameId } = router.query as { gameId: string };
   const [inventory, setInventory] = useState(0);
   const { account, createBurner, isBurnerDeploying } = useDojo();
@@ -37,12 +37,8 @@ const Header = ({ back }: HeaderProps) => {
     gameId,
   });
 
-  const isMobile = IsMobile();
-  const isAtSummary = router.pathname === "/[gameId]/summary";
-
   const moveToSummary = () => {
     if (isAtSummary) return;
-    playSound(Sounds.HoverClick, 0.3);
     router.push(`/${gameId}/summary`);
   };
 
@@ -77,10 +73,10 @@ const Header = ({ back }: HeaderProps) => {
         <HStack flex="1" justify="center">
           {isAtSummary && (
             <Button
-              w="12"
-              onClick={router.back}
-              sx={{ ...headerButtonStyles }}
               h="48px"
+              w="12"
+              sx={headerButtonStyles}
+              onClick={router.back}
             >
               <Arrow size="lg" direction="left" />
             </Button>
@@ -93,7 +89,7 @@ const Header = ({ back }: HeaderProps) => {
             bg="neon.700"
             sx={{ ...headerButtonStyles }}
             onClick={moveToSummary}
-            as="button"
+            as={Button}
           >
             <Flex w="full" align="center" justify="center" gap="10px">
               <HStack>

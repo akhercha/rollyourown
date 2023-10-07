@@ -43,21 +43,20 @@ export const cardPixelatedStyle = ({
   radius?: number;
 }) => ({
   w: "full",
-  sx: {
-    bg: color,
-    borderWidth: "0",
-    borderRadius: "0",
-    borderImageSource: "none",
-    _hover: {
-      borderImageSource: `none`,
-    },
-    _active: {
-      top: 0,
-      left: 0,
-      borderImageSource: `none`,
-    },
-    clipPath: `polygon(${generatePixelBorderPath(radius, pixelSize)})`,
+  bg: color,
+  borderWidth: "0",
+  borderRadius: "0",
+
+  borderImageSource: "none",
+  _hover: {
+    borderImageSource: `none`,
   },
+  _active: {
+    top: 0,
+    left: 0,
+    borderImageSource: `none`,
+  },
+  clipPath: `polygon(${generatePixelBorderPath(radius, pixelSize)})`,
 });
 
 // use borderImage & borderImageOutset to display border with outset
