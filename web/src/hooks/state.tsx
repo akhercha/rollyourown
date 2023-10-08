@@ -22,13 +22,29 @@ export type Encounter = {
   outcome: Outcome;
 };
 
+export type HistoryItem =
+  | {
+      type: "trade";
+      data: TradeType & { drug: Drug };
+    }
+  | {
+      type: "encounter";
+      data: Encounter;
+    };
+
+export type DayHistory = {
+  locationId: string;
+  items: HistoryItem[];
+};
+
 export interface PlayerStore {
   encounters: Encounter[];
   lastEncounter: Encounter | null;
   trades: Map<Drug, TradeType>;
+  history: DayHistory[];
   addEncounter: (status: PlayerStatus, outcome: Outcome) => void;
   addTrade: (drug: Drug, trade: TradeType) => void;
-  resetTurn: () => void;
+  resetTurn: (playerLocationId: string) => void;
   resetAll: () => void;
 }
 
@@ -36,6 +52,8 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
   encounters: [],
   lastEncounter: null,
   trades: new Map(),
+  history: [],
+
   addEncounter: (status: PlayerStatus, outcome: Outcome) => {
     const encounter = { status, outcome };
     set((state) => ({
@@ -77,10 +95,41 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
       state.trades.set(drug, { quantity, direction });
       return { trades: new Map(state.trades) };
     }),
-  resetTurn: () => {
-    set({ trades: new Map(), lastEncounter: null });
-  },
+  resetTurn: (playerLocationId: string) =>
+    set((state) => {
+      const tradesForDay: HistoryItem[] = Array.from(
+        state.trades.entries(),
+      ).map(([drug, trade]) => ({
+        type: "trade",
+        data: { ...trade, drug },
+      }));
+
+      const currentDayItems: HistoryItem[] = tradesForDay;
+
+      if (state.lastEncounter) {
+        currentDayItems.push({
+          type: "encounter",
+          data: state.lastEncounter,
+        });
+      }
+
+      const newDayHistory: DayHistory = {
+        locationId: playerLocationId,
+        items: currentDayItems,
+      };
+
+      return {
+        trades: new Map(),
+        lastEncounter: null,
+        history: [...state.history, newDayHistory],
+      };
+    }),
   resetAll: () => {
-    set({ trades: new Map(), lastEncounter: null, encounters: [] });
+    set({
+      trades: new Map(),
+      lastEncounter: null,
+      encounters: [],
+      history: [],
+    });
   },
 }));

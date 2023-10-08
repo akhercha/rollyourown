@@ -24,7 +24,7 @@ export interface HeaderProps {
 const Header = ({ back }: HeaderProps) => {
   const isMobile = IsMobile();
   const router = useRouter();
-  const isAtSummary = router.pathname === "/[gameId]/summary";
+  const isAtSummary = router.pathname === "/[gameId]/recap";
   const { gameId } = router.query as { gameId: string };
   const [inventory, setInventory] = useState(0);
   const { account, createBurner, isBurnerDeploying } = useDojo();
@@ -83,7 +83,7 @@ const Header = ({ back }: HeaderProps) => {
             spacing={["10px", "30px"]}
             bg="neon.700"
             onClick={() => {
-              isAtSummary ? undefined : router.push(`/${gameId}/summary`);
+              isAtSummary ? undefined : router.push(`/${gameId}/recap`);
             }}
             sx={isAtSummary ? { ...headerStyles } : { ...headerButtonStyles }}
             as={isAtSummary ? HStack : Button}

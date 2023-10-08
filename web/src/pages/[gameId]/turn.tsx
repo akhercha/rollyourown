@@ -135,7 +135,7 @@ export default function Turn() {
           <Button
             w={["full", "auto"]}
             onClick={() => {
-              resetTurn();
+              resetTurn(playerEntity.locationId || "");
               router.push(
                 `/${gameId}/${getLocationById(playerEntity.locationId)?.slug}`,
               );
@@ -149,7 +149,7 @@ export default function Turn() {
   );
 }
 
-const Product = ({
+export const Product = ({
   icon,
   product,
   quantity,

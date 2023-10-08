@@ -9,7 +9,11 @@ import { useDojo } from "@/dojo";
 import BorderImage from "@/components/icons/BorderImage";
 import { PlayerEntity, usePlayerEntity } from "@/dojo/entities/usePlayerEntity";
 import { formatCash } from "@/utils/ui";
+import { TradeDirection, usePlayerStore } from "@/hooks/state";
 import colors from "@/theme/colors";
+
+import { getDrugByType, getLocationById, getOutcomeInfo } from "@/dojo/helpers";
+import { Product } from "@/pages/[gameId]/turn";
 
 import {
   Box,
@@ -20,9 +24,12 @@ import {
   VStack,
   Card,
   Text,
+  UnorderedList,
+  Spacer,
+  ListItem,
 } from "@chakra-ui/react";
 
-interface dojoEntitiesProps {
+interface entitiesProps {
   playerEntity?: PlayerEntity;
   gameEntity?: GameEntity;
 }
@@ -44,7 +51,8 @@ export default function Summary() {
     <Layout
       CustomLeftPanel={() => (
         <CustomLeftPanel
-          title="Hustler Log"
+          title="Hustler Logs"
+          prefixTitle="Here are your"
           playerEntity={playerEntity}
           gameEntity={gameEntity}
         />
@@ -55,7 +63,7 @@ export default function Summary() {
   );
 }
 
-const CustomLeftPanel: React.FC<LeftPanelProps & dojoEntitiesProps> = ({
+const CustomLeftPanel: React.FC<LeftPanelProps & entitiesProps> = ({
   title,
   prefixTitle,
   playerEntity,
@@ -82,12 +90,13 @@ const CustomLeftPanel: React.FC<LeftPanelProps & dojoEntitiesProps> = ({
   );
 };
 
-const PlayerStats: React.FC<dojoEntitiesProps> = ({
-  playerEntity,
-  gameEntity,
-}) => {
+const PlayerStats: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
   if (!playerEntity || !gameEntity)
-    return <Text my="auto">No account or game found.</Text>;
+    return (
+      <Text my="auto" mt="300">
+        No account/game found.
+      </Text>
+    );
 
   const { account } = useDojo();
   const address: string = account?.address || "";
@@ -142,17 +151,70 @@ const PlayerStats: React.FC<dojoEntitiesProps> = ({
   );
 };
 
-const PlayerRecap: React.FC<dojoEntitiesProps> = (playerEntity, gameEntity) => {
+const PlayerRecap: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
   if (!playerEntity || !gameEntity) return <></>;
+  const { trades, history } = usePlayerStore();
+
+  const getTradeDirectionLabel = (direction: number) => {
+    switch (direction) {
+      case TradeDirection.Buy:
+        return "+";
+      case TradeDirection.Sell:
+        return "-";
+      default:
+        return "?";
+    }
+  };
+
+  const showTodayTrades = () => {
+    return (
+      <>
+        {trades.size > 0 && (
+          <>
+            <Text
+              textStyle="subheading"
+              fontSize="13px"
+              align="left"
+              color="neon.500"
+            >
+              {`Day ${
+                gameEntity.maxTurns - playerEntity.turnsRemaining + 1
+              } - ${getLocationById(playerEntity.locationId)?.slug}`}
+            </Text>
+            <Spacer />
+            <UnorderedList w="full" variant="underline">
+              {Array.from(trades).map(([drug, trade]) => {
+                const change =
+                  trade.direction === TradeDirection.Buy ? "+" : "-";
+                const drugInfo = getDrugByType(drug)!;
+                return (
+                  <ListItem key={drug}>
+                    <Product
+                      icon={drugInfo.icon}
+                      product={
+                        getTradeDirectionLabel(trade.direction) +
+                        " " +
+                        drugInfo.name
+                      }
+                      quantity={`${change}${trade.quantity}`}
+                      cost={"$$$"}
+                    />
+                  </ListItem>
+                );
+              })}
+            </UnorderedList>
+          </>
+        )}
+      </>
+    );
+  };
   return (
     <>
-      <VStack mt={[4, 20]} display={["none", "flex"]}>
-        <VStack w="full" align="flex-start">
-          <Text>Here we will have the recap for desktops!</Text>
-        </VStack>
+      <VStack w="full" mt={[4, 100]} display={["none", "flex"]}>
+        {showTodayTrades()}
       </VStack>
       <VStack display={["flex", "none"]} p="10" paddingTop={"20"}>
-        <Text>Here we will have the recap for mobiles!</Text>
+        {showTodayTrades()}
       </VStack>
     </>
   );
