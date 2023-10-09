@@ -1,4 +1,4 @@
-import { Gem, Heart } from "@/components/icons";
+import { Gem, Heart, Event } from "@/components/icons";
 import { Calendar } from "@/components/icons/archive";
 import Layout, { LeftPanelProps } from "@/components/Layout";
 import { useRouter } from "next/router";
@@ -11,10 +11,10 @@ import { PlayerEntity, usePlayerEntity } from "@/dojo/entities/usePlayerEntity";
 import { formatCash } from "@/utils/ui";
 import { TradeDirection, usePlayerStore } from "@/hooks/state";
 import colors from "@/theme/colors";
-
+import { DayHistory } from "@/hooks/state";
 import { getDrugByType, getLocationById, getOutcomeInfo } from "@/dojo/helpers";
 import { Product } from "@/pages/[gameId]/turn";
-
+import React from "react";
 import {
   Box,
   Heading,
@@ -52,7 +52,6 @@ export default function Summary() {
       CustomLeftPanel={() => (
         <CustomLeftPanel
           title="Hustler Logs"
-          prefixTitle="Here are your"
           playerEntity={playerEntity}
           gameEntity={gameEntity}
         />
@@ -102,7 +101,7 @@ const PlayerStats: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
   const address: string = account?.address || "";
 
   return (
-    <HStack my={["auto", "auto"]} mt={["10", "auto"]}>
+    <HStack my={["auto", "auto"]} mt={["10", "100"]}>
       <Card
         p={4}
         paddingBottom={2}
@@ -153,69 +152,93 @@ const PlayerStats: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
 
 const PlayerRecap: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
   if (!playerEntity || !gameEntity) return <></>;
-  const { trades, history } = usePlayerStore();
+  const { history } = usePlayerStore();
 
-  const getTradeDirectionLabel = (direction: number) => {
-    switch (direction) {
-      case TradeDirection.Buy:
-        return "+";
-      case TradeDirection.Sell:
-        return "-";
-      default:
-        return "?";
-    }
-  };
-
-  const showTodayTrades = () => {
-    return (
-      <>
-        {trades.size > 0 && (
-          <>
-            <Text
-              textStyle="subheading"
-              fontSize="13px"
-              align="left"
-              color="neon.500"
-            >
-              {`Day ${
-                gameEntity.maxTurns - playerEntity.turnsRemaining + 1
-              } - ${getLocationById(playerEntity.locationId)?.slug}`}
-            </Text>
-            <Spacer />
-            <UnorderedList w="full" variant="underline">
-              {Array.from(trades).map(([drug, trade]) => {
-                const change =
-                  trade.direction === TradeDirection.Buy ? "+" : "-";
-                const drugInfo = getDrugByType(drug)!;
-                return (
-                  <ListItem key={drug}>
-                    <Product
-                      icon={drugInfo.icon}
-                      product={
-                        getTradeDirectionLabel(trade.direction) +
-                        " " +
-                        drugInfo.name
-                      }
-                      quantity={`${change}${trade.quantity}`}
-                      cost={"$$$"}
-                    />
-                  </ListItem>
-                );
-              })}
-            </UnorderedList>
-          </>
-        )}
-      </>
-    );
-  };
   return (
     <>
-      <VStack w="full" mt={[4, 100]} display={["none", "flex"]}>
-        {showTodayTrades()}
+      <VStack w="full" mt={[4, 30]} display={["none", "flex"]}>
+        {history.length > 0 ? (
+          history.map((dayHistory, index) => (
+            <React.Fragment key={index}>
+              <PlayerDayRecap
+                dayNb={index + 1}
+                dayHistory={dayHistory}
+                mt={10}
+              />
+            </React.Fragment>
+          ))
+        ) : (
+          <Text>Who are you?</Text>
+        )}
       </VStack>
       <VStack display={["flex", "none"]} p="10" paddingTop={"20"}>
-        {showTodayTrades()}
+        <Text>Who are you?</Text>
       </VStack>
     </>
+  );
+};
+
+const PlayerDayRecap = ({
+  dayNb,
+  dayHistory,
+  ...props
+}: {
+  dayNb: number;
+  dayHistory: DayHistory;
+  [key: string]: any;
+}) => {
+  return (
+    <VStack w="full" align="left" {...props}>
+      <Text
+        textStyle="subheading"
+        fontSize="12px"
+        display="inline-block"
+        color="neon.500"
+        mb={-5}
+      >
+        {`Day ${dayNb} - ${getLocationById(dayHistory.locationId)?.slug}`}
+      </Text>
+      <Spacer />
+      <UnorderedList w="full" variant="underline">
+        {dayHistory.items.map((item, index) => {
+          if (item.type === "trade") {
+            const drugInfo = getDrugByType(item.data.drug)!;
+
+            return (
+              <ListItem key={`${item.data.drug}-${index}`}>
+                <Product
+                  icon={drugInfo.icon}
+                  product={`${item.data.direction === 0 ? "Bought" : "Sold"} ${
+                    drugInfo.name
+                  }`}
+                  quantity={`${item.data.quantity}`}
+                  cost={"$$$"}
+                />
+              </ListItem>
+            );
+          } else if (item.type === "encounter") {
+            const encounterInfo = getOutcomeInfo(
+              item.data.status,
+              item.data.outcome,
+            );
+
+            return (
+              <ListItem key={`encounter-${index}`}>
+                <HStack>
+                  <HStack flex="1">
+                    <Event />
+                    <Text>{encounterInfo.name}</Text>
+                  </HStack>
+                  <Text flex="2" color="yellow" textAlign="right">
+                    * {encounterInfo.description} *
+                  </Text>
+                </HStack>
+              </ListItem>
+            );
+          }
+          return null;
+        })}
+      </UnorderedList>
+    </VStack>
   );
 };
