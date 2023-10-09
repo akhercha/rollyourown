@@ -156,7 +156,12 @@ const PlayerRecap: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
 
   return (
     <>
-      <VStack w="full" mt={[4, 30]} display={["none", "flex"]}>
+      <VStack
+        w="full"
+        mt={[4, 30]}
+        display={["none", "flex"]}
+        paddingRight={10}
+      >
         {history.length > 0 ? (
           history.map((dayHistory, index) => (
             <React.Fragment key={index}>
@@ -171,8 +176,22 @@ const PlayerRecap: React.FC<entitiesProps> = ({ playerEntity, gameEntity }) => {
           <Text>Who are you?</Text>
         )}
       </VStack>
-      <VStack display={["flex", "none"]} p="10" paddingTop={"20"}>
-        <Text>Who are you?</Text>
+      <VStack
+        display={["flex", "none"]}
+        paddingTop={"20"}
+        w="full"
+        paddingLeft={5}
+        paddingRight={5}
+      >
+        {history.length > 0 ? (
+          history.map((dayHistory, index) => (
+            <React.Fragment key={index}>
+              <PlayerDayRecap dayNb={index + 1} dayHistory={dayHistory} />
+            </React.Fragment>
+          ))
+        ) : (
+          <Text>Who are you?</Text>
+        )}
       </VStack>
     </>
   );
@@ -188,7 +207,7 @@ const PlayerDayRecap = ({
   [key: string]: any;
 }) => {
   return (
-    <VStack w="full" align="left" {...props}>
+    <VStack w="full" mb={["5", "0"]} align="left" {...props}>
       <Text
         textStyle="subheading"
         fontSize="12px"
@@ -199,7 +218,14 @@ const PlayerDayRecap = ({
         {`Day ${dayNb} - ${getLocationById(dayHistory.locationId)?.slug}`}
       </Text>
       <Spacer />
-      <UnorderedList w="full" variant="underline">
+
+      {dayHistory.items.length === 0 ? (
+        <VStack align={"left"} paddingTop={5}>
+          <Text>Nothing happened...!</Text>
+        </VStack>
+      ) : null}
+
+      <UnorderedList w="full" fontSize={"md"} variant="underline">
         {dayHistory.items.map((item, index) => {
           if (item.type === "trade") {
             const drugInfo = getDrugByType(item.data.drug)!;
@@ -222,12 +248,19 @@ const PlayerDayRecap = ({
               item.data.outcome,
             );
 
+            const event_name =
+              item.data.status == 0
+                ? encounterInfo.name
+                : item.data.status == 1
+                ? "Mugged"
+                : "Arrested";
+
             return (
               <ListItem key={`encounter-${index}`}>
                 <HStack>
                   <HStack flex="1">
                     <Event />
-                    <Text>{encounterInfo.name}</Text>
+                    <Text>{event_name}</Text>
                   </HStack>
                   <Text flex="2" color="yellow" textAlign="right">
                     * {encounterInfo.description} *

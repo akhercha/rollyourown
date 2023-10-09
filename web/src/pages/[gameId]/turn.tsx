@@ -170,7 +170,7 @@ export const Product = ({
 
   return (
     <HStack w="full" {...header}>
-      <HStack flex="4">
+      <HStack flex="6">
         {icon && icon({ boxSize: "24px" })}
         <Text>{product}</Text>
       </HStack>
