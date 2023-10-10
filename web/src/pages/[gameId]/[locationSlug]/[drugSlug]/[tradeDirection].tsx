@@ -89,7 +89,7 @@ export default function Market() {
       ({ hash } = await buy(gameId, location!.name, drug!.name, quantityBuy));
       toastMessage = `You bought ${quantityBuy} ${drug!.name}`;
       quantity = quantityBuy;
-    } else if (tradeDirection === TradeDirection.Sell) {
+    } else {
       ({ hash } = await sell(gameId, location!.name, drug!.name, quantitySell));
       toastMessage = `You sold ${quantitySell} ${drug!.name}`;
       quantity = quantitySell;
@@ -97,7 +97,18 @@ export default function Market() {
 
     toast(toastMessage, Cart, `http://amazing_explorer/${hash}`);
 
+    let totalPrice = market ? market.price * quantity : 0;
+    if (market) {
+      const newPrice = calculateSlippage(
+        market.marketPool,
+        quantity,
+        tradeDirection,
+      ).newPrice;
+      totalPrice = quantity * newPrice;
+    }
+
     addTrade(drug!.type, {
+      price: totalPrice,
       direction: tradeDirection,
       quantity,
     } as TradeType);
@@ -170,23 +181,23 @@ export default function Market() {
           <AlertMessage message={`You have no ${drug.name} to sell`} />
         )}
 
-        <Footer alignItems={["flex-end", "flex-start"]}  height={["100%", "auto"]}>
-            <Button
-              w={["full", "auto"]}
-              onClick={()=> router.back()}
-            >
-              Back
-            </Button>
+        <Footer
+          alignItems={["flex-end", "flex-start"]}
+          height={["100%", "auto"]}
+        >
+          <Button w={["full", "auto"]} onClick={() => router.back()}>
+            Back
+          </Button>
 
           {tradeDirection == TradeDirection.Buy && canBuy && (
             <Button
-            w={["full", "auto"]}
-            isLoading={isSubmitting && !txError}
-            isDisabled={quantityBuy === 0}
-            onClick={onTrade}
-          >
-            Buy ({quantityBuy})
-          </Button>
+              w={["full", "auto"]}
+              isLoading={isSubmitting && !txError}
+              isDisabled={quantityBuy === 0}
+              onClick={onTrade}
+            >
+              Buy ({quantityBuy})
+            </Button>
           )}
 
           {tradeDirection == TradeDirection.Sell && canSell && (
@@ -303,7 +314,7 @@ const QuantitySelector = ({
         </HStack>
       </Flex>
 
-      <HStack w="100%" py={2} >
+      <HStack w="100%" py={2}>
         <Box />
         <Slider
           aria-label="slider-quantity"
@@ -322,7 +333,7 @@ const QuantitySelector = ({
         <HStack spacing="0">
           <ArrowEnclosed
             direction="down"
-            boxSize={["36px","48px"]}
+            boxSize={["36px", "48px"]}
             cursor="pointer"
             onClick={onDown}
             color="neon.500"
@@ -332,7 +343,7 @@ const QuantitySelector = ({
           />
           <ArrowEnclosed
             direction="up"
-            boxSize={["36px","48px"]}
+            boxSize={["36px", "48px"]}
             cursor="pointer"
             onClick={onUp}
             color="neon.500"

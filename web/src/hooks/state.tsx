@@ -13,6 +13,7 @@ export enum TradeDirection {
 }
 
 export type TradeType = {
+  price: number;
   quantity: number;
   direction: TradeDirection;
 };
@@ -70,6 +71,7 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
         return { trades: new Map(state.trades) };
       }
 
+      let price = existingTrade.price;
       let quantity = existingTrade.quantity;
       let direction = existingTrade.direction;
 
@@ -92,7 +94,7 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
         }
       }
 
-      state.trades.set(drug, { quantity, direction });
+      state.trades.set(drug, { price, quantity, direction });
       return { trades: new Map(state.trades) };
     }),
   resetTurn: (playerLocationId: string) =>

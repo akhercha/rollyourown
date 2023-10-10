@@ -6,6 +6,7 @@ import { useGameEntity } from "@/dojo/entities/useGameEntity";
 import { usePlayerEntity } from "@/dojo/entities/usePlayerEntity";
 import { getDrugByType, getLocationById, getOutcomeInfo } from "@/dojo/helpers";
 import { TradeDirection, usePlayerStore } from "@/hooks/state";
+import { formatCash } from "@/utils/ui";
 
 import {
   HStack,
@@ -80,7 +81,9 @@ export default function Turn() {
                       icon={drugInfo.icon}
                       product={drugInfo.name}
                       quantity={`${change}${trade.quantity}`}
-                      cost={"$$$"}
+                      cost={`${trade.direction === 0 ? "-" : "+"} ${formatCash(
+                        trade.price,
+                      )}`}
                     />
                   </ListItem>
                 );

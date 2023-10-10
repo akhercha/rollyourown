@@ -229,7 +229,8 @@ const PlayerDayRecap = ({
         {dayHistory.items.map((item, index) => {
           if (item.type === "trade") {
             const drugInfo = getDrugByType(item.data.drug)!;
-
+            const change =
+              item.data.direction === TradeDirection.Buy ? "+" : "-";
             return (
               <ListItem key={`${item.data.drug}-${index}`}>
                 <Product
@@ -237,8 +238,8 @@ const PlayerDayRecap = ({
                   product={`${item.data.direction === 0 ? "Bought" : "Sold"} ${
                     drugInfo.name
                   }`}
-                  quantity={`${item.data.quantity}`}
-                  cost={"$$$"}
+                  quantity={item.data.quantity}
+                  cost={`${change} ${formatCash(item.data.price)}`}
                 />
               </ListItem>
             );
