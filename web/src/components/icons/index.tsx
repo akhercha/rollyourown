@@ -53,6 +53,7 @@ export * from "./DollarBag";
 export * from "./Twitter";
 export * from "./Fist";
 export * from "./Flipflop";
+export * from "./SliderThumb";
 
 
 // Template for adding new icons. When copying svg from figma, viewBox is assumed

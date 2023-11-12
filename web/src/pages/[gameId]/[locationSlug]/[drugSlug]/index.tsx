@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Box, Text, VStack, HStack, Card, Button, Flex, Image, Divider } from "@chakra-ui/react";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/router";
-import { Alert, ArrowEnclosed, Cart, Bag } from "@/components/icons";
+import { Alert, ArrowEnclosed, Cart, Bag, SliderThumb as CustomThumb } from "@/components/icons";
 import { Footer } from "@/components/Footer";
-import { Slider, SliderTrack, SliderFilledTrack } from "@chakra-ui/react";
+import { Slider, SliderTrack, SliderFilledTrack, SliderThumb } from "@chakra-ui/react";
 import { Sounds, playSound } from "@/hooks/sound";
 import { TradeDirection, TradeType } from "@/hooks/state";
 import AlertMessage from "@/components/AlertMessage";
@@ -21,13 +21,11 @@ import { useDojoContext } from "@/dojo/hooks/useDojoContext";
 export default function Market() {
   const router = useRouter();
   const gameId = router.query.gameId as string;
-  const tradeDirection = (router.query.tradeDirection as string) === "buy" ? TradeDirection.Buy : TradeDirection.Sell;
   const location = getLocationBySlug(router.query.locationSlug as string);
   const drug = getDrugBySlug(router.query.drugSlug as string);
 
   const [market, setMarket] = useState<DrugMarket>();
-  const [quantityBuy, setQuantityBuy] = useState(0);
-  const [quantitySell, setQuantitySell] = useState(0);
+  const [quantity, setQuantity] = useState(0);
   const [canSell, setCanSell] = useState(false);
   const [canBuy, setCanBuy] = useState(false);
 
@@ -66,23 +64,23 @@ export default function Market() {
 
     let toastMessage = "",
       hash = "",
-      quantity,
-      total;
+      quantity = 0,
+      total,
+      tradeDirection;
 
     try {
-      if (tradeDirection === TradeDirection.Buy) {
-        ({ hash } = await buy(gameId, location!.type, drug!.type, quantityBuy));
-        toastMessage = `You bought ${quantityBuy} ${drug!.name}`;
-        quantity = quantityBuy;
+      if (quantity >= 0) {
+        ({ hash } = await buy(gameId, location!.type, drug!.type, quantity));
+        toastMessage = `You bought ${quantity} ${drug!.name}`;
 
-        const slippage = calculateSlippage(market!.marketPool, quantity, tradeDirection);
+        const slippage = calculateSlippage(market!.marketPool, quantity, TradeDirection.Buy);
         total = slippage.newPrice * quantity;
-      } else if (tradeDirection === TradeDirection.Sell) {
-        ({ hash } = await sell(gameId, location!.type, drug!.type, quantitySell));
-        toastMessage = `You sold ${quantitySell} ${drug!.name}`;
-        quantity = quantitySell;
+      } else if (quantity < 0) {
+        ({ hash } = await sell(gameId, location!.type, drug!.type, quantity));
+        quantity = -quantity;
+        toastMessage = `You sold ${quantity} ${drug!.name}`;
 
-        const slippage = calculateSlippage(market!.marketPool, quantity, tradeDirection);
+        const slippage = calculateSlippage(market!.marketPool, quantity, TradeDirection.Sell);
         total = slippage.newPrice * quantity;
       }
 
@@ -94,7 +92,7 @@ export default function Market() {
     } catch (e) {
       console.log(e);
     }
-  }, [tradeDirection, quantityBuy, quantitySell, gameId, location, drug, router, buy, sell, toast, market]);
+  }, [quantity, gameId, location, drug, router, buy, sell, toast, market]);
 
   if (!router.isReady || !playerEntity || !drug || !market) return <></>;
 
@@ -111,29 +109,15 @@ export default function Market() {
             Back
           </Button>
 
-          {tradeDirection == TradeDirection.Buy && canBuy && (
-            <Button
-              w={["full", "auto"]}
-              px={["auto", "20px"]}
-              isLoading={isPending /* && !txError*/}
-              isDisabled={quantityBuy === 0}
-              onClick={onTrade}
-            >
-              Buy ({quantityBuy})
-            </Button>
-          )}
-
-          {tradeDirection == TradeDirection.Sell && canSell && (
-            <Button
-              w={["full", "auto"]}
-              px={["auto", "20px"]}
-              isLoading={isPending /*&& !txError*/}
-              isDisabled={quantitySell === 0}
-              onClick={onTrade}
-            >
-              Sell ({quantitySell})
-            </Button>
-          )}
+          <Button
+            w={["full", "auto"]}
+            px={["auto", "20px"]}
+            isLoading={isPending /* && !txError*/}
+            isDisabled={quantity === 0}
+            onClick={onTrade}
+          >
+            {quantity >= 0 ? "Buy" : "Sell"} ({Math.round(Math.abs(quantity))})
+          </Button>
         </Footer>
       }
     >
@@ -157,26 +141,15 @@ export default function Market() {
             </HStack>
           </HStack>
         </Card>
-        {((tradeDirection == TradeDirection.Buy && canBuy) || (tradeDirection == TradeDirection.Sell && canSell)) && (
+        {(canBuy || canSell) && (
           <QuantitySelector
             drug={drug}
             player={playerEntity}
             market={market}
-            type={tradeDirection}
             onChange={(quantity, _) => {
-              if (tradeDirection == TradeDirection.Buy) {
-                setQuantityBuy(quantity);
-              } else {
-                setQuantitySell(quantity);
-              }
+              setQuantity(quantity);
             }}
           />
-        )}
-
-        {tradeDirection == TradeDirection.Buy && !canBuy && <AlertMessage message="You can't afford this" />}
-
-        {tradeDirection == TradeDirection.Sell && !canSell && (
-          <AlertMessage message={`You have no ${drug.name} to sell`} />
         )}
       </Box>
     </Layout>
@@ -184,13 +157,11 @@ export default function Market() {
 }
 
 const QuantitySelector = ({
-  type,
   player,
   drug,
   market,
   onChange,
 }: {
-  type: TradeDirection;
   drug: DrugInfo;
   player: PlayerEntity;
   market: DrugMarket;
@@ -201,21 +172,23 @@ const QuantitySelector = ({
   const [alertColor, setAlertColor] = useState<string>("neon.500");
   const [quantity, setQuantity] = useState(0);
   const [max, setMax] = useState(0);
+  const [min, setMin] = useState(0);
 
   useEffect(() => {
-    if (type === TradeDirection.Buy) {
-      let max_buyable = calculateMaxQuantity(market.marketPool, player.cash);
-      let bag_space = player.getTransport() - player.drugCount;
-      setMax(Math.min(max_buyable, bag_space));
-    } else if (type === TradeDirection.Sell) {
-      const playerQuantity = player.drugs.find((d) => d.id === drug.id)?.quantity;
-      setMax(playerQuantity || 0);
-      setQuantity(playerQuantity || 0);
-    }
-  }, [type, drug, player, market]);
+    const playerQuantity = player.drugs.find((d) => d.id === drug.id)?.quantity ?? 0;
+    setMin(-playerQuantity || 0);
+    let max_buyable = calculateMaxQuantity(market.marketPool, player.cash);
+    let bag_space = player.getTransport() - player.drugCount;
+    setMax(Math.min(max_buyable, bag_space));
+    setQuantity(playerQuantity || 0);
+  }, [drug, player, market]);
 
   useEffect(() => {
-    const slippage = calculateSlippage(market.marketPool, quantity, type);
+    const slippage = calculateSlippage(
+      market.marketPool,
+      quantity,
+      quantity > 0 ? TradeDirection.Buy : TradeDirection.Sell,
+    );
 
     if (slippage.priceImpact > 0.2) {
       // >20%
@@ -230,7 +203,7 @@ const QuantitySelector = ({
     setPriceImpact(slippage.priceImpact);
     setTotalPrice(quantity * slippage.newPrice);
     onChange(quantity, slippage.newPrice);
-  }, [quantity, market, type, onChange]);
+  }, [quantity, market, onChange]);
 
   const onDown = useCallback(() => {
     if (quantity >= 1) {
@@ -244,12 +217,34 @@ const QuantitySelector = ({
     }
   }, [quantity, max]);
 
-  const onSlider = useCallback((value: number) => {
-    setQuantity(value);
-  }, []);
+  //const onSlider = useCallback((value: number) => {
+  //  setQuantity(value);
+  //}, []);
+
+  const onSlider = useCallback(
+    (value: number) => {
+      // Translate the slider value to actual quantity
+      // For example, if max buyable is 50, and slider is at 100, quantity should be 50
+      // Similarly, if max sellable is 30, and slider is at -100, quantity should be -30
+
+      let actualQuantity;
+      if (value > 0) {
+        // Calculate the proportional buyable quantity
+        actualQuantity = (value / 100) * max;
+      } else {
+        // Calculate the proportional sellable quantity
+        actualQuantity = (value / 100) * Math.abs(min);
+      }
+
+      setQuantity(actualQuantity);
+      // You may also want to adjust the onChange callback to reflect the actual quantity
+      // onChange(actualQuantity, ...);
+    },
+    [min, max],
+  );
 
   return (
-    <VStack opacity={max === 0 ? "0.2" : "1"} pointerEvents={max === 0 ? "none" : "all"} w="full">
+    <VStack w="full">
       <Flex w="100%" direction={["column", "row"]} justifyContent="space-between" align="center" gap={["10px", "20px"]}>
         <Text color={alertColor}>
           <Alert size="sm" /> {priceImpact ? (priceImpact * 100).toFixed(2) : "0"}% slippage ($
@@ -302,6 +297,32 @@ const QuantitySelector = ({
           }}
         />
       </HStack>
+      <VStack w="full">
+        <Slider
+          aria-label="slider-quantity"
+          w="80%"
+          min={-100}
+          max={100}
+          step={1}
+          defaultValue={0}
+          value={(quantity / Math.max(Math.abs(min), max)) * 100}
+          onChange={onSlider}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb
+            boxSize={10}
+            background={"transparent"}
+            _focus={{
+              outline: "none",
+              boxShadow: "none",
+            }}
+          >
+            <CustomThumb />
+          </SliderThumb>
+        </Slider>
+      </VStack>
     </VStack>
   );
 };

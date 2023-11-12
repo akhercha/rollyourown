@@ -1,29 +1,9 @@
-import { Arrow, Car, Siren, Truck } from "@/components/icons";
+import { Arrow } from "@/components/icons";
 import Layout from "@/components/Layout";
 import Button from "@/components/Button";
 import { Inventory } from "@/components/Inventory";
-import colors from "@/theme/colors";
-import BorderImage from "@/components/icons/BorderImage";
-import {
-  Box,
-  HStack,
-  VStack,
-  Text,
-  useEventListener,
-  Card,
-  Grid,
-  GridItem,
-  Spacer,
-  useDisclosure,
-} from "@chakra-ui/react";
-import {
-  getDrugById,
-  getDrugByType,
-  getLocationById,
-  getLocationByType,
-  locations,
-  sortDrugMarkets,
-} from "@/dojo/helpers";
+import { Box, HStack, VStack, Text, useEventListener, Card, Grid, GridItem, useDisclosure } from "@chakra-ui/react";
+import { getDrugById, getLocationById, getLocationByType, locations, sortDrugMarkets } from "@/dojo/helpers";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCash, generatePixelBorderPath } from "@/utils/ui";
@@ -193,16 +173,15 @@ export default function Travel() {
         ),
       }}
       footer={
-          
-            <Footer >
+        <Footer>
           {playerEntity.turn > 0 && (
-            <Button isDisabled={isPending} w={["full", "auto"]}   px={["auto","20px"]} onClick={() => router.back()}>
+            <Button isDisabled={isPending} w={["full", "auto"]} px={["auto", "20px"]} onClick={() => router.back()}>
               Back
             </Button>
           )}
           <Button
             w={["full", "auto"]}
-            px={["auto","20px"]}
+            px={["auto", "20px"]}
             isDisabled={!targetId || targetId === currentLocationId}
             isLoading={isPending /*&& !txError*/}
             onClick={onContinue}
