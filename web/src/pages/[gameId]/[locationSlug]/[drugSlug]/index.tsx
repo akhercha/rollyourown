@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Box, Text, VStack, HStack, Card, Button, Flex, Image } from "@chakra-ui/react";
+import { Box, Text, VStack, HStack, Card, Button, Flex, Image, Divider } from "@chakra-ui/react";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/router";
-import { Alert, ArrowEnclosed, Cart } from "@/components/icons";
+import { Alert, ArrowEnclosed, Cart, Bag } from "@/components/icons";
 import { Footer } from "@/components/Footer";
 import { Slider, SliderTrack, SliderFilledTrack } from "@chakra-ui/react";
 import { Sounds, playSound } from "@/hooks/sound";
@@ -142,12 +142,18 @@ export default function Market() {
           <Image src={`/images/drugs/${drug.slug}.png`} alt={drug.name} h={[140, 300]} maxH="40vh" />
           <HStack w="100%" justifyContent="space-between" fontSize="16px">
             <HStack>
-              {drug.icon({ boxSize: "36px" })}
-              <Text>{formatCash(market.price)}</Text>
+              <Text ml={3} fontSize="lg">
+                {formatCash(market.price)}
+              </Text>
             </HStack>
             <HStack>
-              <Cart mr={1} size="lg" />
-              <Text>{formatQuantity(market.marketPool.quantity)}</Text>
+              <Bag color="yellow.400" mr={1} size="md" />
+              <Text color="yellow.400" size="lg">
+                {formatQuantity(playerEntity.drugs.find((d) => d.id === drug?.id)?.quantity ?? 0)}
+              </Text>
+              <Divider orientation="vertical" borderColor="neon.600" h="12px" ml={2} />
+              <Cart mr={1} size="md" />
+              <Text size="lg">{formatQuantity(market.marketPool.quantity)}</Text>
             </HStack>
           </HStack>
         </Card>
@@ -227,7 +233,7 @@ const QuantitySelector = ({
   }, [quantity, market, type, onChange]);
 
   const onDown = useCallback(() => {
-    if (quantity > 1) {
+    if (quantity >= 1) {
       setQuantity(quantity - 1);
     }
   }, [quantity]);
@@ -257,7 +263,17 @@ const QuantitySelector = ({
         </HStack>
       </Flex>
 
-      <HStack w="100%" py={2}>
+      <HStack w="100%" py={3} spacing={3}>
+        <ArrowEnclosed
+          direction="down"
+          boxSize={["36px", "48px"]}
+          cursor="pointer"
+          onClick={onDown}
+          color="neon.500"
+          _hover={{
+            color: "neon.300",
+          }}
+        />
         <Box />
         <Slider
           aria-label="slider-quantity"
@@ -273,38 +289,18 @@ const QuantitySelector = ({
             <SliderFilledTrack />
           </SliderTrack>
         </Slider>
-        <HStack spacing="0">
-          <ArrowEnclosed
-            direction="down"
-            boxSize={["36px", "48px"]}
-            cursor="pointer"
-            onClick={onDown}
-            color="neon.500"
-            _hover={{
-              color: "neon.300",
-            }}
-          />
-          <ArrowEnclosed
-            direction="up"
-            boxSize={["36px", "48px"]}
-            cursor="pointer"
-            onClick={onUp}
-            color="neon.500"
-            _hover={{
-              color: "neon.300",
-            }}
-          />
-        </HStack>
-        <Button
-          h="36px"
-          w="100px"
-          variant="pixelated"
-          marginInlineStart={0}
-          // display={["none", "block"]}
-          onClick={() => setQuantity(max)}
-        >
-          Max
-        </Button>
+
+        <Box />
+        <ArrowEnclosed
+          direction="up"
+          boxSize={["36px", "48px"]}
+          cursor="pointer"
+          onClick={onUp}
+          color="neon.500"
+          _hover={{
+            color: "neon.300",
+          }}
+        />
       </HStack>
     </VStack>
   );
